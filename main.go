@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/nickng/pscribble-foreach/proto"
+	"github.com/nickng/scribble-foreach-experiment/proto"
 )
 
 // Example protocol - nested one-to-many:
