@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/nickng/scribble-foreach-experiment/fused"
 	"github.com/nickng/scribble-foreach-experiment/proto"
 )
 
@@ -23,15 +24,19 @@ func init() {
 }
 
 func main() {
-	proto.ProtoParam["k"] = 2
+	fused.ProtoParam["k"] = 2
+	fmt.Println("---- fused foreach ----")
+	fusedRun()
 
+	proto.ProtoParam["k"] = 2
 	fmt.Println("---- GOOD ----")
-	good()
+	protoGood()
 	fmt.Println("---- BAD ----")
-	bad()
+	protoBad()
+
 }
 
-func good() {
+func protoGood() {
 	// This function is the good use of foreach
 
 	s := new(proto.S0)
@@ -57,7 +62,7 @@ func good() {
 	s.EndForeach().End()
 }
 
-func bad() {
+func protoBad() {
 	// This function runs the protocol as follows:
 	// --> enter outer loop body
 	//   --> enter inner loop body
@@ -79,4 +84,36 @@ func bad() {
 		Send_Ai_bar("").
 		EndForeach(). // exit outer
 		End()
+}
+
+func fusedRun() {
+	// This function is the good use of foreach in the fused API design
+
+	s := new(fused.S0)
+	j := 0
+	var (
+		s1        *fused.S1
+		moreOuter bool
+	)
+	for s1, moreOuter = s.Foreach(); moreOuter; {
+		j++
+		fmt.Println("Outer loop", j)
+		i := 0
+		var (
+			s2        *fused.S2
+			moreInner bool
+		)
+		for s2, moreInner = s1.Foreach(); moreInner; {
+			i++
+			fmt.Println("Inner loop", i)
+			s1 = s2.Send_Aj_foo(i)
+			fmt.Println("Inner loop end", i)
+		}
+		fmt.Println("End inner foreach, jump back to inner foreach init")
+		s3 := s1.EndForeach()
+		s = s3.Send_Ai_bar("outer foreach body")
+		fmt.Println("End of outer foreach")
+		fmt.Println("Outer loop end", j)
+	}
+	s.EndForeach().End()
 }
