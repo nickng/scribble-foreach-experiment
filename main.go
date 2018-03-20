@@ -6,6 +6,7 @@ import (
 
 	"github.com/nickng/scribble-foreach-experiment/fused"
 	"github.com/nickng/scribble-foreach-experiment/proto"
+	"github.com/nickng/scribble-foreach-experiment/recur"
 )
 
 // Example protocol - nested one-to-many:
@@ -24,15 +25,21 @@ func init() {
 }
 
 func main() {
-	fused.ProtoParam["k"] = 2
-	fmt.Println("---- fused foreach ----")
-	fusedRun()
+	recur.ProtoParam["k"] = 2
+	fmt.Println("---- recur foreach ----")
+	recurRun()
+	fmt.Println("---- recur foreach (inline) ----")
+	recurInlineRun()
 
 	proto.ProtoParam["k"] = 2
 	fmt.Println("---- GOOD ----")
 	protoGood()
 	fmt.Println("---- BAD ----")
 	protoBad()
+
+	fused.ProtoParam["k"] = 2
+	fmt.Println("---- fused foreach ----")
+	fusedRun()
 
 }
 
@@ -116,4 +123,61 @@ func fusedRun() {
 		fmt.Println("Outer loop end", j)
 	}
 	s.EndForeach().End()
+}
+
+func recurRun() {
+	// This function is the good use of foreach in the parameter (recur) API design
+
+	i := 0
+	innerLoop := func(s *recur.S2) *recur.S1 {
+		i++
+		fmt.Println("Inner loop", i)
+		innerBodyEnd := s.Send_Aj_foo(i)
+		fmt.Println("Inner loop end", i)
+		return innerBodyEnd
+	}
+
+	j := 0
+	outerLoop := func(s *recur.S1) *recur.S0 {
+		j++
+		i = 0
+		fmt.Println("Outer loop", j)
+		outerBodyEnd := s.
+			Foreach(innerLoop).
+			Send_Ai_bar("outer foreach body")
+		fmt.Println("End of outer foreach")
+		fmt.Println("Outer loop end", j)
+		return outerBodyEnd
+	}
+
+	s := new(recur.S0)
+	s.Foreach(outerLoop).End()
+}
+
+func recurInlineRun() {
+	// This function is the good use of foreach in the parameter (recur) API design
+	// This is the inlined version
+
+	j := 0
+
+	s := new(recur.S0)
+	s.Foreach(
+		func(s *recur.S1) *recur.S0 {
+			j++
+			fmt.Println("Outer loop", j)
+			i := 0
+			outerBodyEnd := s.
+				Foreach(
+					func(s *recur.S2) *recur.S1 {
+						i++
+						fmt.Println("Inner loop", i)
+						innerBodyEnd := s.Send_Aj_foo(i)
+						fmt.Println("Inner loop end", i)
+						return innerBodyEnd
+					}).
+				Send_Ai_bar("outer foreach body")
+			fmt.Println("End of outer foreach")
+			fmt.Println("Outer loop end", j)
+			return outerBodyEnd
+		}).End()
 }
