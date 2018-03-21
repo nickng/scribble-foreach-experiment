@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/nickng/scribble-foreach-experiment/fused"
+	"github.com/nickng/scribble-foreach-experiment/nested"
 	"github.com/nickng/scribble-foreach-experiment/proto"
 	"github.com/nickng/scribble-foreach-experiment/recur"
 )
@@ -25,6 +26,10 @@ func init() {
 }
 
 func main() {
+	nested.ProtoParam["k"] = 2
+	fmt.Println("---- nested FSM ----")
+	nestedRun()
+
 	recur.ProtoParam["k"] = 2
 	fmt.Println("---- recur foreach ----")
 	recurRun()
@@ -169,6 +174,34 @@ func recurInlineRun() {
 			outerBodyEnd := s.
 				Foreach(
 					func(s *recur.S2) *recur.S1 {
+						i++
+						fmt.Println("Inner loop", i)
+						innerBodyEnd := s.Send_Aj_foo(i)
+						fmt.Println("Inner loop end", i)
+						return innerBodyEnd
+					}).
+				Send_Ai_bar("outer foreach body")
+			fmt.Println("End of outer foreach")
+			fmt.Println("Outer loop end", j)
+			return outerBodyEnd
+		}).End()
+}
+
+func nestedRun() {
+	// This function is the good use of foreach in the parameter API design
+	// based on nested FSM style
+
+	j := 0
+
+	s := new(nested.S0)
+	s.Foreach(
+		func(s *nested.S1) *nested.S4 {
+			j++
+			fmt.Println("Outer loop", j)
+			i := 0
+			outerBodyEnd := s.
+				Foreach(
+					func(s *nested.S2) *nested.S5 {
 						i++
 						fmt.Println("Inner loop", i)
 						innerBodyEnd := s.Send_Aj_foo(i)
