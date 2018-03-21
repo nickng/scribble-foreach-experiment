@@ -45,12 +45,11 @@ func main() {
 	fmt.Println("---- GOOD ----")
 	protoGood()
 	fmt.Println("---- BAD ----")
-	protoBad()
+	//protoBad()
 
 	fused.ProtoParam["k"] = 2
 	fmt.Println("---- fused foreach ----")
-	fusedRun()
-
+	fusedRun() // fails linear usage check
 }
 
 func protoGood() {
