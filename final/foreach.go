@@ -111,7 +111,7 @@ func (s *fsmStack) push(ID, rangeLen int) {
 		last: rangeLen - 1,
 	}
 	s.stack = append(s.stack, &newForeach)
-	s.index = len(s.stack) // cached top index
+	s.index = len(s.stack) - 1 // cached top index
 }
 
 func (s *fsmStack) pop() {

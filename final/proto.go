@@ -70,7 +70,7 @@ func (s *S0) Foreach(bodyFn func(*S1) *S4) *SEnd {
 
 	// Run at least once (range is never empty)
 	for sstack.top().canEnter() {
-		body(new(S1)).end()
+		bodyFn(new(S1)).end()
 	}
 	sstack.pop()
 	return new(SEnd)
@@ -94,21 +94,21 @@ type S1 struct {
 func (s *S1) ID() int { return 1 } // Generate as method returning constant so immutable
 
 // Foreach moves s1 → s2, where s2 is the body of inner foreach
-func (s *S1) Foreach(body func(*S2) *S5) *S3 {
+func (s *S1) Foreach(bodyFn func(*S2) *S5) *S3 {
 	s.Use()
 	if sstack.isEmpty() || sstack.top().ID != s.ID() {
 		// first time enter loop
 		sstack.push(s.ID(), ProtoParam["k"]) // where k is the param of foreach
 	} else if sstack.top().ID == s.ID() {
 		// re-enter loop
-		sstack.top().curr++
+		sstack.top().increment()
 	} else {
 		panic("shouldn't get here")
 	}
 
 	// Run at least once (range is never empty)
 	for sstack.top().canEnter() {
-		body(new(S2)).end()
+		bodyFn(new(S2)).end()
 	}
 	sstack.pop()
 	return new(S3)
