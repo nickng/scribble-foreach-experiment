@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/nickng/scribble-foreach-experiment/forrange"
 	"github.com/nickng/scribble-foreach-experiment/fused"
 	"github.com/nickng/scribble-foreach-experiment/nested"
 	"github.com/nickng/scribble-foreach-experiment/proto"
@@ -26,6 +27,10 @@ func init() {
 }
 
 func main() {
+	forrange.ProtoParam["k"] = 2
+	fmt.Println("---- for-range ----")
+	forrangeRun()
+
 	nested.ProtoParam["k"] = 2
 	fmt.Println("---- nested FSM ----")
 	nestedRun()
@@ -213,4 +218,29 @@ func nestedRun() {
 			fmt.Println("Outer loop end", j)
 			return outerBodyEnd
 		}).End()
+}
+
+func forrangeRun() {
+	// This function is the good use of foreach in the parameter API design
+	// based on nested FSM style
+
+	j := 0
+	s := new(forrange.S0)
+	loop0, end0 := s.Foreach()
+	for body0 := range loop0 {
+		j++
+		fmt.Println("Outer loop", j)
+		i := 0
+		loop1, end1 := body0.Foreach()
+		for body1 := range loop1 {
+			i++
+			fmt.Println("Inner loop", i)
+			body1.Send_Aj_foo(i).End()
+			fmt.Println("Inner loop end", i)
+		}
+		end1.Send_Ai_bar("outer foreach body").End()
+		fmt.Println("End of outer foreach")
+		fmt.Println("Outer loop end", j)
+	}
+	end0.End()
 }
